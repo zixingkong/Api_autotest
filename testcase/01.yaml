@@ -1,0 +1,12 @@
+args:
+  - post
+  - /xxx/add
+kwargs:
+  -
+    caseName: 新增xxx
+    data:
+      name: ${gen_uid(10)}
+validator:
+  -
+    json:
+      successed: True
