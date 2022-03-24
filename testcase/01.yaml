@@ -1,9 +1,9 @@
 args:
   - post
-  - /xxx/add
+  - /post
 kwargs:
   -
-    caseName: 新增xxx
+    caseName: 新增测试接口
     data:
       name: ${gen_uid(10)}
 validator:

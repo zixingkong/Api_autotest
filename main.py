@@ -1,4 +1,6 @@
-
+import asyncio
+from lib.common import entrace
+import os
 
 def main(test_cases):
     """
@@ -7,7 +9,7 @@ def main(test_cases):
     :return:
     """
     loop = asyncio.get_event_loop()
-    semaphore = asyncio.Semaphore(bxmat.semaphore)
+    semaphore = asyncio.Semaphore(10)
     # 需要处理的任务
     # tasks = [asyncio.ensure_future(one(case_name=test_case, semaphore=semaphore)) for test_case in test_cases]
     task = loop.create_task(entrace(test_cases, loop, semaphore))
@@ -19,3 +21,11 @@ def main(test_cases):
         loop.close()
 
     return task.result()
+
+
+if __name__ == '__main__':
+    project_dir = os.path.dirname(__file__)
+    test_case_dir = os.path.join(project_dir, "testcase")
+    test_case_files = os.listdir(test_case_dir)
+    test_cases = [test_case_dir +os.sep+ test_case_name for test_case_name in test_case_files ]
+    main(test_case_files)
