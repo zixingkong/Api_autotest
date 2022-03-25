@@ -10,7 +10,7 @@ import yaml
 import os
 from aiohttp import ClientSession
 import aiofiles
-from collections import UserDict
+import re
 
 
 class BXMDict(dict):
@@ -40,6 +40,39 @@ async def yaml_load(dir='', file=''):
         data = await f.read()
 
     data = yaml.safe_load(data)
+    # 匹配函数调用形式的语法
+    pattern_function = re.compile(r'^\${([A-Za-z_]+\w*\(.*\))}$')
+    pattern_function2 = re.compile(r'^\${(.*)}$')
+    # 匹配取默认值的语法
+    pattern_function3 = re.compile(r'^\$\((.*)\)$')
+
+    def my_iter(data):
+        """
+        递归测试用例，根据不同数据类型做相应处理，将模板语法转化为正常值
+        :param data:
+        :return:
+        """
+        if isinstance(data, (list, tuple)):
+            for index, _data in enumerate(data):
+                data[index] = my_iter(_data) or _data
+        elif isinstance(data, dict):
+            for k, v in data.items():
+                data[k] = my_iter(v) or v
+        elif isinstance(data, (str, bytes)):
+            # m = pattern_function.match(data)
+            # if not m:
+            #     m = pattern_function2.match(data)
+            # if m:
+            #     return eval(m.group(1))
+            # if not m:
+            #     m = pattern_function3.match(data)
+            # if m:
+            #     K, k = m.group(1).split(':')
+            #     return BXMDict.default_values.get(K).get(k)
+
+            return data
+
+    my_iter(data)
     return BXMDict(data)
 
 
@@ -64,7 +97,7 @@ async def http(*args, **kwargs):
             }
 
 
-async def one(session, case_dir='/Users/wyy/code/github/python/Api_autotest/testcase', case_name=''):
+async def one(session, case_dir='', case_name=''):
     """
     一份测试用例执行的全过程，包括读取.yml测试用例，执行http请求，返回请求结果
     所有操作都是异步非阻塞的
@@ -74,7 +107,6 @@ async def one(session, case_dir='/Users/wyy/code/github/python/Api_autotest/test
     :return:
     """
     test_data = await yaml_load(dir=case_dir, file=case_name)
-    print(test_data)
     result = BXMDict({
         'case_dir': os.path.dirname(case_name),
         'api': test_data.args[1].replace('/', '_'),
@@ -108,6 +140,7 @@ async def entrace(test_cases, loop, semaphore=None):
     :return:
     """
     res = BXMDict()
+    case_dir = '/Users/wyy/code/github/python/Api_autotest/testcase'
     # 在CookieJar的update_cookies方法中，如果unsafe=False并且访问的是IP地址，客户端是不会更新cookie信息
     # 这就导致session不能正确处理登录态的问题
     # 所以这里使用的cookie_jar参数使用手动生成的CookieJar对象，并将其unsafe设置为True
@@ -115,7 +148,7 @@ async def entrace(test_cases, loop, semaphore=None):
         if semaphore:
             async with semaphore:
                 for test_case in test_cases:
-                    data = await one(session, case_name=test_case)
+                    data = await one(session,case_dir=case_dir, case_name=test_case)
                     res.setdefault(data.pop('case_dir'), BXMList()).append(data)
         else:
             for test_case in test_cases:
