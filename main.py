@@ -24,8 +24,11 @@ def main(test_cases):
 
 
 if __name__ == '__main__':
-    project_dir = os.path.dirname(__file__)
+    # 获取当前文件路径
+    current_path = os.path.abspath(__file__)
+    # 获取当前文件的父目录
+    project_dir = os.path.abspath(os.path.dirname(current_path) + os.path.sep + ".")
     test_case_dir = os.path.join(project_dir, "testcase")
     test_case_files = os.listdir(test_case_dir)
     test_cases = [test_case_dir + os.sep + test_case_name for test_case_name in test_case_files]
-    main(test_case_files)
+    main(test_cases)
